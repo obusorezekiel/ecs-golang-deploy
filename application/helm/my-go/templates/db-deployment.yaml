@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.dbname.name }}
+  namespace: {{ .Values.dbname.namespace }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount | default 1 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.dbLabel | default "my-db" }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.dbLabel | default "my-db" }}
+    spec:
+      containers:
+        - name: {{ .Values.dbimage.name }}
+          image: "{{ .Values.dbimage.repository }}:{{ .Values.dbimage.tag | default "latest" }}"
+          ports:
+            - containerPort: 5432
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.dbconfigMapName | default "db-config" }}
+                  key: DATABASE_HOST
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.dbconfigMapName | default "db-config" }}
+                  key: DATABASE_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.dbconfigMapName | default "db-config" }}
+                  key: DATABASE_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.dbsecretName | default "db-secrets" }}
+                  key: DATABASE_PASSWORD
+          volumeMounts:
+            - mountPath: {{ .Values.volumeMounts.dataMountPath }}
+              name: {{ .Values.volumeMounts.volumeName }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: {{ .Values.volumes.volumeName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.pvcName }}

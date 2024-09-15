@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: go-web-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/obusorezekiel/golang-sre-project.git
+    targetRevision: HEAD
+    path: helm/my-go
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: student-api
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true      
+    syncOptions:
+      - CreateNamespace=true

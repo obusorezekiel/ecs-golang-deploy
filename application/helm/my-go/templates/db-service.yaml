@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.dbService.name }}
+  namespace: {{ .Values.dbService.namespace }}
+spec:
+  ports:
+    - port: {{ .Values.dbService.port | default 5432 }}  # Default to port 5432 if not defined
+      targetPort: {{ .Values.dbService.targetPort | default 5432 }}
+      protocol: TCP
+  selector:
+    app: my-db

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.appService.name }}
+  namespace: {{ .Values.appService.nameSpace | default .Release.Namespace }}
+spec:
+  type: {{ .Values.appService.type }}
+  ports:
+    - port: {{ .Values.appService.port }}
+      targetPort: {{ .Values.appService.targetPort }}
+      protocol: TCP
+  selector:
+    app: student-app

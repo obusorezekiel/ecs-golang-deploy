@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: {{ .Values.appconfigMapName }}
+    namespace: {{ .Values.namespaceOverride | default .Release.Namespace }}
+data:
+    DATABASE_HOST: {{ .Values.database.host | quote }}
+    DATABASE_PORT: {{ .Values.database.port | quote }}
+    DATABASE_NAME: {{ .Values.database.name | quote }}
+    DATABASE_USERNAME: {{ .Values.database.username | quote }}

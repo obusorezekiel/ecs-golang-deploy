@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appname.name }}
+  namespace: {{ .Values.appname.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appLabel | default "my-app" }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appLabel | default "my-app" }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.appimage.repository | default "obusorezekiel/gin-gorm-crud" }}:{{ .Values.apptag }}"
+          imagePullPolicy: {{ .Values.appimage.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: 8888
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.appconfigMapName | default "app-config" }}
+                  key: DATABASE_HOST
+            - name: DATABASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.appconfigMapName | default "app-config" }}
+                  key: DATABASE_PORT
+            - name: DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.appconfigMapName | default "app-config" }}
+                  key: DATABASE_NAME
+            - name: DATABASE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.appconfigMapName | default "app-config" }}
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.appsecretName | default "app-secrets" }}
+                  key: DATABASE_PASSWORD
+      initContainers:
+        - name: migrate
+          image: obusorezekiel/db-migration:latest
+          command: ["migrate", "-path=/migrations", "-database=postgres://obusor:password@postgres-db:5432/postgres?sslmode=disable", "up"]
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+
+eksctl create addon --name aws-ebs-csi-driver --cluster eks2 --service-account-role-arn arn:aws:iam::353928175117 :role/AmazonEKS_EBS_CSI_DriverRole --force

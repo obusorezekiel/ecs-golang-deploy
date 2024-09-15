@@ -1,0 +1,179 @@
+# Default values for my-go.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+appname:
+  name: app-deployment
+  namespace: student-api
+
+dbname:
+  name: db-deployment
+  namespace: student-api
+
+appimage:
+  repository: obusorezekiel/gin-gorm-crud
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+
+apptag: v1.0.67
+
+migrationimage:
+  repository: obusorezekiel/db-migration:latest
+  pullPolicy: IfNotPresenrepositoryt
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+dbimage:
+  name: db-container
+  repository: postgres
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+appconfigMapName: app-config
+appsecretName: app-secrets
+
+dbconfigMapName: db-config
+dbsecretName: db-secrets
+
+imagePullSecrets: []
+nameOverride: ""
+namespaceOverride: student-api
+fullnameOverride: ""
+
+appLabel: student-app
+dbLabel: my-db
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+appService:
+  name: app-service
+  nameSpace: student-api
+  type: LoadBalancer
+  port: 80
+  targetPort: 8888
+
+dbService:
+  name: postgres-db
+  namespace: student-api
+  port: 5432
+  targetPort: 5432
+
+database:
+  host: "postgres-db"
+  port: "5432"
+  name: "postgres"
+  username: "obusor"
+
+secret:
+  databasePassword: password
+
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 500m
+    memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector:
+  type: application
+
+initContainers:
+  - name: migrate
+    image: obusorezekiel/db-migration:latest
+    command:
+      - migrate
+      - -path=/migrations
+      - -database=postgres://obusor:password@postgres-db:5432/postgres?sslmode=disable
+      - up
+
+volumeMounts:
+  dataMountPath: /var/lib/postgresql/data
+  volumeName: postgres-persistent-storage
+
+volumes:
+  volumeName: postgres-persistent-storage
+  pvcName: postgres-pv-claim
+
+persistentVolume:
+  name: postgres-pv-volume
+  namespace: student-api
+  storageClassName: manual
+  capacity: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath: /mnt/data
+
+persistentVolumeClaim:
+  name: postgres-pv-claim
+  namespace: student-api
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+secrets:
+  name: db-secrets
+  namespace: student-api
+  type: Opaque
+  data:
+    DATABASE_PASSWORD: cGFzc3dvcmQ=
+
+tolerations: []
+
+affinity: {}

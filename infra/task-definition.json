@@ -1,0 +1,24 @@
+{
+    "family":"my_go-task",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "networkMode": "awsvpc",
+    "containerDefinitions": [
+      {
+        "name": "my_go_task",
+        "image": "gin_gorm_crud",
+        "essential": true,
+        "portMappings": [
+          {
+            "containerPort": 8888,
+            "hostPort": 8888
+          }
+        ]
+      }
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::353928175117:role/ecsTaskExecutionRole"
+}
+  

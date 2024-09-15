@@ -1,0 +1,14 @@
+# Use the official Golang image as the base image
+FROM golang:1.22.2
+
+# Install migrate CLI
+RUN go install -tags 'postgres' -v github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# Create a directory for migrations
+WORKDIR /migrations
+
+# Copy migration files into the container
+COPY database/migration /migrations
+
+# Set the default command to run migrations
+CMD ["migrate", "--version"]
